@@ -1,7 +1,8 @@
--- === ARTIFAKT 1: LOADING SCREEN (FIXED, NO ANIMATIONS) ===
+-- === ARTIFAKT 1: LOADING SCREEN (WORKING PROGRESS + STATUS) ===
 pcall(function() setclipboard("https://discord.gg/rvZndRfkyX") end)
 
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local StarterGui = game:GetService("StarterGui")
 local CoreGui = game:GetService("CoreGui")
@@ -62,7 +63,7 @@ local COLORS = {
     a2 = Color3.fromRGB(50,180,255),
 }
 
--- Container (fixed size, no animation)
+-- Container
 local Container = Instance.new("Frame", SG)
 Container.AnchorPoint = Vector2.new(0.5,0.5)
 Container.Position = UDim2.fromScale(0.5,0.5)
@@ -135,7 +136,7 @@ end)
 
 local Badge = Instance.new("TextLabel", Info)
 Badge.BackgroundTransparency = 1
-Badge.Text = "Connecting..."
+Badge.Text = "Loading..."
 Badge.Font = Enum.Font.GothamBold
 Badge.TextSize = 13
 Badge.TextColor3 = COLORS.a2
@@ -161,7 +162,7 @@ Loading.ZIndex = 20
 
 local StatusText = Instance.new("TextLabel", Loading)
 StatusText.BackgroundTransparency = 1
-StatusText.Text = "Connecting to server"
+StatusText.Text = "Initializing"
 StatusText.Font = Enum.Font.GothamSemibold
 StatusText.TextSize = 18
 StatusText.TextColor3 = COLORS.text
@@ -181,7 +182,7 @@ local pbCorner = Instance.new("UICorner", ProgressBg); pbCorner.CornerRadius = U
 local pbStroke = Instance.new("UIStroke", ProgressBg); pbStroke.Thickness = 1; pbStroke.Color = Color3.fromRGB(40,40,80); pbStroke.Transparency = 0.3
 
 local ProgressBar = Instance.new("Frame", ProgressBg)
-ProgressBar.Size = UDim2.new(0.65, 0, 1, 0) -- Fixed at 65%
+ProgressBar.Size = UDim2.new(0,0,1,0)
 ProgressBar.BackgroundColor3 = COLORS.a1
 ProgressBar.ZIndex = 22
 local barCorner = Instance.new("UICorner", ProgressBar); barCorner.CornerRadius = UDim.new(1,0)
@@ -189,7 +190,7 @@ local barGrad = Instance.new("UIGradient", ProgressBar); barGrad.Color = ColorSe
 
 local Percentage = Instance.new("TextLabel", Loading)
 Percentage.BackgroundTransparency = 1
-Percentage.Text = "65%"
+Percentage.Text = "0%"
 Percentage.Font = Enum.Font.GothamBold
 Percentage.TextSize = 24
 Percentage.TextColor3 = COLORS.a2
@@ -208,3 +209,30 @@ Subtitle.Size = UDim2.new(1,0,0,20)
 Subtitle.Position = UDim2.new(0,0,0,120)
 Subtitle.ZIndex = 22
 Subtitle.TextXAlignment = Enum.TextXAlignment.Center
+
+-- === LOADING ANIMATION (WORKING) ===
+local steps = {
+    {text = "Initializing", time = 1.5, progress = 20},
+    {text = "Loading assets", time = 1.8, progress = 50},
+    {text = "Connecting to server", time = 2.0, progress = 100},
+}
+
+task.spawn(function()
+    local current = 0
+    for _, s in ipairs(steps) do
+        Badge.Text = s.text
+        StatusText.Text = s.text
+
+        local target = s.progress / 100
+        local tween = TweenService:Create(ProgressBar, TweenInfo.new(s.time, Enum.EasingStyle.Linear), {Size = UDim2.new(target, 0, 1, 0)})
+        tween:Play()
+
+        for i = 1, s.time * 30 do
+            local p = math.floor(current + (s.progress - current) * (i / (s.time * 30)))
+            Percentage.Text = p .. "%"
+            task.wait(1/30)
+        end
+        current = s.progress
+    end
+    task.wait(0.5)
+end)
